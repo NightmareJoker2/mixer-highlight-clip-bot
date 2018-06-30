@@ -1,0 +1,39 @@
+{
+  "name": "mixer-highlight-clip-bot",
+  "version": "1.0.0",
+  "description": "An example for a crude Beam/Mixer highlight clip bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NightmareJoker2/mixer-highlight-clip-bot.git"
+  },
+  "keywords": [
+    "beam",
+    "mixer",
+    "chat",
+    "bot",
+    "follow",
+    "highlight",
+    "highlights",
+    "clip",
+    "clips",
+    "streaming",
+    "tools"
+  ],
+  "author": "NightmareJoker2",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/NightmareJoker2/mixer-highlight-clip-bot/issues"
+  },
+  "homepage": "https://github.com/NightmareJoker2/mixer-highlight-clip-bot#readme",
+  "dependencies": {
+    "beam-client-node": "^1.0.3",
+    "carina": "^0.11.0",
+    "config": "^1.30.0",
+    "ws": "^3.3.3"
+  }
+}
