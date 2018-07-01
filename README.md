@@ -1,7 +1,7 @@
 Mixer Highlight Clip Bot
 ===
 
-This is an example of a chat bot that can create clips on Mixer on a channel where they are enabled. There are currently no restrictions built-in on which users can use the `!clip` command it provides. Use with caution.
+This is an example of a chat bot that can create clips on Mixer on a channel where they are enabled. You will need to configure the user and role restrictions based on which users can use the `!clip` command it provides. Use with caution.
 
 ## How to use
 

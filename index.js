@@ -139,107 +139,118 @@ function handleMessage(message, username, userId, userRoles)
         }
         else if (message == '!clip' || message.startsWith('!clip '))
         {
-            let BeamClient2 = new Beam.Client(new Beam.DefaultRequestRunner());
-            let thatApiKey = apiKey2;
-            if (typeof(thatApiKey) == 'undefined' || thatApiKey == null)
+            let authorized_userIds = config.get('Beam.authorized_userIds');
+            let userIsAuthorized = authorized_userIds.includes(userId);
+            let authorized_roles = config.get('Beam.authorized_roles');
+            let roleIsAuthorized = userRoles.some(item => authorized_roles.indexOf(item) > -1);
+            if (userIsAuthorized || roleIsAuthorized)
             {
-                thatApiKey = apiKey;
-            }
-            BeamClient2.use(new Beam.OAuthProvider(BeamClient2, {
-                tokens: {
-                    access: thatApiKey,
-                    expires: Date.now() + (365 * 24 * 60 * 60 * 1000)
-                },
-            }));
-            BeamClient2.request('GET', 'channels/'+ channelInfo.id + '/broadcast')
-                .then(response =>
-                    {
-                        if (response.body.hasOwnProperty('id'))
+                let BeamClient2 = new Beam.Client(new Beam.DefaultRequestRunner());
+                let thatApiKey = apiKey2;
+                if (typeof(thatApiKey) == 'undefined' || thatApiKey == null)
+                {
+                    thatApiKey = apiKey;
+                }
+                BeamClient2.use(new Beam.OAuthProvider(BeamClient2, {
+                    tokens: {
+                        access: thatApiKey,
+                        expires: Date.now() + (365 * 24 * 60 * 60 * 1000)
+                    },
+                }));
+                BeamClient2.request('GET', 'channels/'+ channelInfo.id + '/broadcast')
+                    .then(response =>
                         {
-                            highlightTitle = null;
-                            clipDuration = 30;
-                            if (message.startsWith('!clip '))
+                            if (response.body.hasOwnProperty('id'))
                             {
-                                let commandArgumentString = message.substring(6);
-                                let commandArguments = commandArgumentString.trim().split(/\s+/);
-                                let requestedClipDuration = null;
-                                if (commandArguments.length > 0 && isNaN(commandArguments[0]) && isNaN(commandArguments[commandArguments.length - 1]))
+                                highlightTitle = null;
+                                clipDuration = 30;
+                                if (message.startsWith('!clip '))
                                 {
-                                    highlightTitle = commandArgumentString.trim();
-                                }
-                                else if (commandArguments.length > 0 && !isNaN(commandArguments[commandArguments.length - 1]))
-                                {
-                                    requestedClipDuration = parseInt(commandArguments[commandArguments.length - 1]);
-                                    if (commandArguments.length > 1)
+                                    let commandArgumentString = message.substring(6);
+                                    let commandArguments = commandArgumentString.trim().split(/\s+/);
+                                    let requestedClipDuration = null;
+                                    if (commandArguments.length > 0 && isNaN(commandArguments[0]) && isNaN(commandArguments[commandArguments.length - 1]))
                                     {
-                                        highlightTitle = commandArgumentString.substring(0, commandArgumentString.length - commandArguments[commandArguments.length - 1].length).trim();
+                                        highlightTitle = commandArgumentString.trim();
+                                    }
+                                    else if (commandArguments.length > 0 && !isNaN(commandArguments[commandArguments.length - 1]))
+                                    {
+                                        requestedClipDuration = parseInt(commandArguments[commandArguments.length - 1]);
+                                        if (commandArguments.length > 1)
+                                        {
+                                            highlightTitle = commandArgumentString.substring(0, commandArgumentString.length - commandArguments[commandArguments.length - 1].length).trim();
+                                        }
+                                    }
+                                    else if (commandArguments.length > 0 && !isNaN(commandArguments[0]))
+                                    {
+                                        requestedClipDuration = parseInt(commandArguments[0]);
+                                        if (commandArguments.length > 1)
+                                        {
+                                            highlightTitle = commandArgumentString.substring(commandArguments[0].length).trim();
+                                        }
+                                    }
+                                    if (highlightTitle != null && typeof(highlightTitle) !== 'undefined')
+                                    {
+                                        highlightTitle = highlightTitle.replace(/^"(.*)"$/, '$1').trim();
+                                    }
+
+                                    if (requestedClipDuration != null && requestedClipDuration < 15)
+                                    {
+                                        clipDuration = 15;
+                                    }
+                                    else if (requestedClipDuration != null && requestedClipDuration > 300)
+                                    {
+                                        clipDuration = 300;
+                                    }
+                                    else if (requestedClipDuration != null)
+                                    {
+                                        clipDuration = requestedClipDuration;
                                     }
                                 }
-                                else if (commandArguments.length > 0 && !isNaN(commandArguments[0]))
-                                {
-                                    requestedClipDuration = parseInt(commandArguments[0]);
-                                    if (commandArguments.length > 1)
-                                    {
-                                        highlightTitle = commandArgumentString.substring(commandArguments[0].length).trim();
-                                    }
-                                }
+                                highlightClipRequestObject = {
+                                    broadcastId: response.body.id,
+                                    clipDurationInSeconds: clipDuration
+                                };
                                 if (highlightTitle != null && typeof(highlightTitle) !== 'undefined')
                                 {
-                                    highlightTitle = highlightTitle.replace(/^"(.*)"$/, '$1').trim();
+                                    highlightClipRequestObject.highlightTitle = highlightTitle;
                                 }
-
-                                if (requestedClipDuration != null && requestedClipDuration < 15)
-                                {
-                                    clipDuration = 15;
-                                }
-                                else if (requestedClipDuration != null && requestedClipDuration > 300)
-                                {
-                                    clipDuration = 300;
-                                }
-                                else if (requestedClipDuration != null)
-                                {
-                                    clipDuration = requestedClipDuration;
-                                }
+                                //console.log(highlightClipRequestObject);
+                                BeamClient2.request('POST', 'clips/create', { body: highlightClipRequestObject })
+                                    .then(response =>
+                                    {
+                                        //console.log(response.body);
+                                        if (response.body.hasOwnProperty('contentId'))
+                                        {
+                                            let successResponse = 'Successfully created clip "' + response.body.title + '" with a duration of ' + response.body.durationInSeconds + ' seconds. https://mixer.com/' + channelInfo.token + '?clip=' + response.body.shareableId + ' \\ :D /';
+                                            successResponse = successResponse.substring(0, 359);
+                                            chatSocket.call('msg', [successResponse]);
+                                        }
+                                        else
+                                        {
+                                            throw "BeamAPIErrorException: " + JSON.stringify(response.body);
+                                        }
+                                    }).catch(error =>
+                                    {
+                                        console.error(error);
+                                        chatSocket.call('msg', ['An error occurred creating your clip... :(']);
+                                    });
                             }
-                            highlightClipRequestObject = {
-                                broadcastId: response.body.id,
-                                clipDurationInSeconds: clipDuration
-                            };
-                            if (highlightTitle != null && typeof(highlightTitle) !== 'undefined')
+                            else
                             {
-                                highlightClipRequestObject.highlightTitle = highlightTitle;
+                                console.error('Error: Attempted to create a highlight clip when not broadcasting... that won\'t work... *sad face emoji*'); 
+                                // can we haz method to clip sections of a VoD, plez? :3
+                                chatSocket.call('msg', ['You cannot create a highlight clip while the channel is not broadcasting! >.< \n So sorry... :#']);
                             }
-                            //console.log(highlightClipRequestObject);
-                            BeamClient2.request('POST', 'clips/create', { body: highlightClipRequestObject })
-                                .then(response =>
-                                {
-                                    //console.log(response.body);
-                                    if (response.body.hasOwnProperty('contentId'))
-                                    {
-                                        let successResponse = 'Successfully created clip "' + response.body.title + '" with a duration of ' + response.body.durationInSeconds + ' seconds. https://mixer.com/' + channelInfo.token + '?clip=' + response.body.shareableId + ' \\ :D /';
-                                        successResponse = successResponse.substring(0, 359);
-                                        chatSocket.call('msg', [successResponse]);
-                                    }
-                                    else
-                                    {
-                                        throw "BeamAPIErrorException: " + JSON.stringify(response.body);
-                                    }
-                                }).catch(error =>
-                                {
-                                    console.error(error);
-                                    chatSocket.call('msg', ['An error occurred creating your clip... :(']);
-                                });
-                        }
-                        else
+                        }).catch(error =>
                         {
-                            console.error('Error: Attempted to create a highlight clip when not broadcasting... that won\'t work... *sad face emoji*'); 
-                            // can we haz method to clip sections of a VoD, plez? :3
-                            chatSocket.call('msg', ['You cannot create a highlight clip while the channel is not broadcasting! >.< \n So sorry... :#']);
-                        }
-                    }).catch(error =>
-                    {
-                        console.error(error);
-                    });
+                            console.error(error);
+                        });
+            }
+            else
+            {
+                chatSocket.call('whisper', [username, 'You do not have permission to use this, sorry.']);
+            }
         }
     }
 }

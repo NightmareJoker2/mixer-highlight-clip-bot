@@ -12,7 +12,13 @@ Save a file with the name `default.json` in the `config` directory with the foll
     "Beam":
     {
         "api_key": "", // your implicit grant OAuth token for your bot here
-        "api_key2": null
+        "api_key2": null,
+        "authorized_roles": [
+            // authorized roles here
+        ],
+        "authorized_userIds": [
+            // authorized users by ID here
+        ]
     }
 }
 ```
@@ -35,6 +41,14 @@ Your best approach is probably copying the `example.json` file and renaming the 
     {
         "api_key": "", // your implicit grant OAuth token for your bot here
         "api_key2": "", // your implicit grant OAuth token for your channel here
+        "authorized_roles": [
+            // authorized roles here
+        ],
+        "authorized_userIds": [
+            // authorized users by ID here
+        ]
     }
 }
 ```
+
+3. You can modify the user roles that are allowed to use the `!clip` command in `Beam.authorized_roles` and specify user's IDs who are allowed to use it in `Beam.authorized_userIds`.

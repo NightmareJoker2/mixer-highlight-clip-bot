@@ -4,6 +4,21 @@
     ],
     "Beam" : {
         "api_key": "blablablabotapikeybla",
-        "api_key2": "asdfasdfchannelapikeyasdf"
+        "api_key2": "asdfasdfchannelapikeyasdf",
+        "authorized_roles": [
+            "Mod",
+            "ChannelEditor",
+            "InteractiveEditor",
+            "GlobalMod",
+            "Owner",
+            "Staff",
+            "Founder"
+        ],
+        "authorized_userIds": [
+            3790593,
+            13947336,
+            23873618,
+            190316
+        ]
     }
 }
